@@ -35,10 +35,10 @@ $ ./fridge.py milk Sam in
 Added: milk (Sam) — logged in on 2026-09-23
 
 $ ./fridge.py list
-ITEM                   OWNER           DATE IN      TIME IN
------------------------------------------------------------------
-leftover pasta         Anthony         2026-09-23   today
-milk                   Sam             2026-09-23   today
+      ITEM       |   OWNER   |   DATE IN    |  TIME IN 
+-----------------+-----------+--------------+----------
+ leftover pasta  |  Anthony  |  2026-09-23  |   today  
+      milk       |    Sam    |  2026-09-23  |   today  
 
 $ ./fridge.py milk Sam out
 Removed: milk (Sam), was in since 2026-09-23.
@@ -50,5 +50,6 @@ Single-file script, `fridge.py`. No install step — run directly with Python.
 
 - **Storage**: SQLite database, `fridge.db`, created automatically next to the script on first run. Gitignored, since it's local state, not source.
 - **Schema**: one table, `fridge_items(id, item, owner, date_in)`. `date_in` is stored as an ISO date string; elapsed time ("3 days", "2 weeks") is computed on read, not stored.
+- **Output**: `list_items()` sizes each column to its widest value (header or data) and centers every cell — no fixed-width truncation.
 - **Commands**: `in`, `out`, and `list` map directly to `add_item()`, `remove_item()`, and `list_items()` in `fridge.py`. `main()` parses `sys.argv` and dispatches to one of the three — there's no argument-parsing library involved.
 - **Conflict handling**: `remove_item()` matches on food + owner. Zero matches reports nothing found; one match removes it; multiple matches prompts interactively, oldest first.

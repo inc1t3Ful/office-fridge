@@ -126,10 +126,22 @@ def list_items():
         print("Fridge is empty.")
         return
 
-    print(f"{'ITEM':<22} {'OWNER':<15} {'DATE IN':<12} TIME IN")
-    print("-" * 65)
-    for item, owner, date_in in rows:
-        print(f"{item:<22} {owner:<15} {date_in:<12} {format_elapsed(date_in)}")
+    headers = ("ITEM", "OWNER", "DATE IN", "TIME IN")
+    table = [(item, owner, date_in, format_elapsed(date_in)) for item, owner, date_in in rows]
+
+    widths = [
+        max(len(header), *(len(row[i]) for row in table)) + 2
+        for i, header in enumerate(headers)
+    ]
+    separator = "-+-".join("-" * w for w in widths)
+
+    def format_row(cols):
+        return " | ".join(col.center(w) for col, w in zip(cols, widths))
+
+    print(format_row(headers))
+    print(separator)
+    for row in table:
+        print(format_row(row))
 
 
 def main():
