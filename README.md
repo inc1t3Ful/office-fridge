@@ -9,15 +9,18 @@ Python 3.9+
 ## Usage
 
 ```
-fridge.py <food> <owner> in      Add an item to the fridge
-fridge.py <food> <owner> out     Remove an item from the fridge
-fridge.py list                   Show current inventory
+fridge.py <food> <owner> in [date]   Add an item to the fridge
+fridge.py <food> <owner> out         Remove an item from the fridge
+fridge.py list                       Show current inventory
 ```
+
+`[date]` is optional (format `YYYY-MM-DD`), defaults to today. Useful for backdating entries when first populating the db.
 
 Quote multi-word names:
 
 ```
 fridge.py "leftover pasta" Anthony in
+fridge.py "leftover pasta" Anthony in 2026-09-01
 ```
 
 Removing an item looks up matches by food name and owner (case-insensitive). If more than one match exists, it lists them and asks which to remove.

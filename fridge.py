@@ -3,12 +3,16 @@
 fridge.py — simple office fridge inventory tracker (SQLite-backed)
 
 Usage:
-    fridge.py <food> <owner> in      Add an item to the fridge
-    fridge.py <food> <owner> out     Remove an item from the fridge
-    fridge.py list                   Show current inventory
+    fridge.py <food> <owner> in [date]   Add an item to the fridge
+    fridge.py <food> <owner> out         Remove an item from the fridge
+    fridge.py list                       Show current inventory
+
+[date] is optional, format YYYY-MM-DD. Defaults to today. Useful for
+backdating entries when first populating the db.
 
 Quote multi-word names, e.g.:
     fridge.py "leftover pasta" Anthony in
+    fridge.py "leftover pasta" Anthony in 2026-09-01
 """
 
 import sys
@@ -50,16 +54,24 @@ def format_elapsed(date_in_str):
     return f"{months} month{'s' if months != 1 else ''}"
 
 
-def add_item(food, owner):
+def add_item(food, owner, date_in=None):
+    if date_in is None:
+        date_in = date.today().isoformat()
+    else:
+        try:
+            date.fromisoformat(date_in)
+        except ValueError:
+            print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
+            return
+
     conn = get_connection()
-    today = date.today().isoformat()
     conn.execute(
         "INSERT INTO fridge_items (item, owner, date_in) VALUES (?, ?, ?)",
-        (food, owner, today),
+        (food, owner, date_in),
     )
     conn.commit()
     conn.close()
-    print(f"Added: {food} ({owner}) — logged in on {today}")
+    print(f"Added: {food} ({owner}) — logged in on {date_in}")
 
 
 def remove_item(food, owner):
@@ -125,12 +137,13 @@ def main():
 
     if len(args) == 1 and args[0] == "list":
         list_items()
-    elif len(args) == 3 and args[2] in ("in", "out"):
-        food, owner, action = args
-        if action == "in":
-            add_item(food, owner)
-        else:
-            remove_item(food, owner)
+    elif len(args) in (3, 4) and args[2] == "in":
+        food, owner = args[0], args[1]
+        date_in = args[3] if len(args) == 4 else None
+        add_item(food, owner, date_in)
+    elif len(args) == 3 and args[2] == "out":
+        food, owner, _ = args
+        remove_item(food, owner)
     else:
         print(__doc__)
         sys.exit(1)
