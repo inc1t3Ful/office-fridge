@@ -3,16 +3,20 @@
 fridge.py — simple office fridge inventory tracker (SQLite-backed)
 
 Usage:
-    fridge.py <food> <owner> in [date]   Add an item to the fridge
-    fridge.py <food> <owner> out         Remove an item from the fridge
-    fridge.py list                       Show current inventory
+    fridge.py <food> <owner> in [date]    Add an item to the fridge
+    fridge.py <food> <owner> out [date]   Remove an item from the fridge
+    fridge.py list                        Show current inventory
 
-[date] is optional, format YYYY-MM-DD. Defaults to today. Useful for
-backdating entries when first populating the db.
+[date] is optional, format YYYY-MM-DD. Defaults to today.
+
+For "in": useful for backdating entries when first populating the db.
+For "out": disambiguates when the same food/owner has multiple entries.
+If omitted and multiple matches exist, you'll be prompted to pick one.
 
 Quote multi-word names, e.g.:
     fridge.py "leftover pasta" Anthony in
     fridge.py "leftover pasta" Anthony in 2026-09-01
+    fridge.py "leftover pasta" Anthony out 2026-09-01
 """
 
 import sys
@@ -74,14 +78,22 @@ def add_item(food, owner, date_in=None):
     print(f"Added: {food} ({owner}) — logged in on {date_in}")
 
 
-def remove_item(food, owner):
+def remove_item(food, owner, date_in=None):
     conn = get_connection()
-    cur = conn.execute(
-        "SELECT id, item, owner, date_in FROM fridge_items "
-        "WHERE item = ? COLLATE NOCASE AND owner = ? COLLATE NOCASE "
-        "ORDER BY date_in ASC",
-        (food, owner),
-    )
+    if date_in is None:
+        cur = conn.execute(
+            "SELECT id, item, owner, date_in FROM fridge_items "
+            "WHERE item = ? COLLATE NOCASE AND owner = ? COLLATE NOCASE "
+            "ORDER BY date_in ASC",
+            (food, owner),
+        )
+    else:
+        cur = conn.execute(
+            "SELECT id, item, owner, date_in FROM fridge_items "
+            "WHERE item = ? COLLATE NOCASE AND owner = ? COLLATE NOCASE AND date_in = ? "
+            "ORDER BY date_in ASC",
+            (food, owner, date_in),
+        )
     matches = cur.fetchall()
 
     if not matches:
@@ -153,9 +165,10 @@ def main():
         food, owner = args[0], args[1]
         date_in = args[3] if len(args) == 4 else None
         add_item(food, owner, date_in)
-    elif len(args) == 3 and args[2] == "out":
-        food, owner, _ = args
-        remove_item(food, owner)
+    elif len(args) in (3, 4) and args[2] == "out":
+        food, owner = args[0], args[1]
+        date_in = args[3] if len(args) == 4 else None
+        remove_item(food, owner, date_in)
     else:
         print(__doc__)
         sys.exit(1)
