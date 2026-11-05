@@ -113,11 +113,14 @@ def remove_item(food, owner, date_in=None):
             conn.close()
             return
         try:
-            chosen = matches[int(choice) - 1]
-        except (ValueError, IndexError):
+            selection = int(choice)
+        except ValueError:
+            selection = 0
+        if not 1 <= selection <= len(matches):
             print("Invalid selection. Nothing removed.")
             conn.close()
             return
+        chosen = matches[selection - 1]
 
     row_id = chosen[0]
     conn.execute("DELETE FROM fridge_items WHERE id = ?", (row_id,))
