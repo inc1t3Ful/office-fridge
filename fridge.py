@@ -10,6 +10,7 @@ Usage:
 [date] is optional, format YYYY-MM-DD. Defaults to today.
 
 For "in": useful for backdating entries when first populating the db.
+Future dates are rejected.
 For "out": disambiguates when the same food/owner has multiple entries.
 If omitted and multiple matches exist, you'll be prompted to pick one.
 
@@ -58,15 +59,24 @@ def format_elapsed(date_in_str):
     return f"{months} month{'s' if months != 1 else ''}"
 
 
+def is_valid_date(value):
+    """True only for canonical YYYY-MM-DD; Python 3.11+ fromisoformat also accepts forms like 20260901."""
+    try:
+        return date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
 def add_item(food, owner, date_in=None):
+    today = date.today().isoformat()
     if date_in is None:
-        date_in = date.today().isoformat()
-    else:
-        try:
-            date.fromisoformat(date_in)
-        except ValueError:
-            print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
-            return
+        date_in = today
+    elif not is_valid_date(date_in):
+        print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
+        return
+    elif date_in > today:
+        print(f"Invalid date '{date_in}'. Date can't be in the future.")
+        return
 
     conn = get_connection()
     conn.execute(
@@ -79,6 +89,10 @@ def add_item(food, owner, date_in=None):
 
 
 def remove_item(food, owner, date_in=None):
+    if date_in is not None and not is_valid_date(date_in):
+        print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
+        return
+
     conn = get_connection()
     if date_in is None:
         cur = conn.execute(

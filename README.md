@@ -14,7 +14,7 @@ fridge.py <food> <owner> out [date]   Remove an item from the fridge
 fridge.py list                        Show current inventory
 ```
 
-`[date]` is optional (format `YYYY-MM-DD`), defaults to today. For `in`, useful for backdating entries when first populating the db. For `out`, disambiguates when the same food/owner has multiple entries.
+`[date]` is optional (format `YYYY-MM-DD`), defaults to today. For `in`, useful for backdating entries when first populating the db; future dates are rejected. For `out`, disambiguates when the same food/owner has multiple entries.
 
 Quote multi-word names:
 
