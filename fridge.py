@@ -4,10 +4,11 @@ fridge.py — simple office fridge inventory tracker (SQLite-backed)
 
 Usage:
     fridge.py <food> [owner] in [date]    Add an item to the fridge
-    fridge.py <food> <owner> out [date]   Remove an item from the fridge
+    fridge.py <food> [owner] out [date]   Remove an item from the fridge
     fridge.py list                        Show current inventory
 
 [owner] is optional. For "in": defaults to Anthony.
+For "out": if omitted, matches the food name across all owners.
 
 [date] is optional, format YYYY-MM-DD. Defaults to today.
 
@@ -21,6 +22,7 @@ Quote multi-word names, e.g.:
     fridge.py "leftover pasta" Anthony in 2026-09-01
     fridge.py "leftover pasta" Anthony out 2026-09-01
     fridge.py "leftover pasta" in
+    fridge.py "leftover pasta" out
 """
 
 import sys
@@ -92,39 +94,43 @@ def add_item(food, owner, date_in=None):
     print(f"Added: {food} ({owner}) — logged in on {date_in}")
 
 
-def remove_item(food, owner, date_in=None):
+def remove_item(food, owner=None, date_in=None):
+    """owner=None matches the food name across all owners."""
     if date_in is not None and not is_valid_date(date_in):
         print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
         return
 
+    query = "SELECT id, item, owner, date_in FROM fridge_items WHERE item = ? COLLATE NOCASE"
+    params = [food]
+    if owner is not None:
+        query += " AND owner = ? COLLATE NOCASE"
+        params.append(owner)
+    if date_in is not None:
+        query += " AND date_in = ?"
+        params.append(date_in)
+    query += " ORDER BY date_in ASC"
+
     conn = get_connection()
-    if date_in is None:
-        cur = conn.execute(
-            "SELECT id, item, owner, date_in FROM fridge_items "
-            "WHERE item = ? COLLATE NOCASE AND owner = ? COLLATE NOCASE "
-            "ORDER BY date_in ASC",
-            (food, owner),
-        )
-    else:
-        cur = conn.execute(
-            "SELECT id, item, owner, date_in FROM fridge_items "
-            "WHERE item = ? COLLATE NOCASE AND owner = ? COLLATE NOCASE AND date_in = ? "
-            "ORDER BY date_in ASC",
-            (food, owner, date_in),
-        )
-    matches = cur.fetchall()
+    matches = conn.execute(query, params).fetchall()
 
     if not matches:
-        print(f"No match found for '{food}' belonging to '{owner}'.")
+        if owner is None:
+            print(f"No match found for '{food}'.")
+        else:
+            print(f"No match found for '{food}' belonging to '{owner}'.")
         conn.close()
         return
 
     if len(matches) == 1:
         chosen = matches[0]
     else:
-        print(f"Multiple matches found for '{food}' ({owner}):")
+        if owner is None:
+            print(f"Multiple matches found for '{food}':")
+        else:
+            print(f"Multiple matches found for '{food}' ({owner}):")
         for idx, (row_id, item, owner_name, date_in) in enumerate(matches, start=1):
-            print(f"  [{idx}] in since {date_in} ({format_elapsed(date_in)} ago)")
+            who = f"{owner_name}, " if owner is None else ""
+            print(f"  [{idx}] {who}in since {date_in} ({format_elapsed(date_in)} ago)")
         choice = input(f"Which one to remove? [1-{len(matches)}, or 'c' to cancel]: ").strip()
         if choice.lower() == "c":
             print("Cancelled.")
@@ -144,7 +150,7 @@ def remove_item(food, owner, date_in=None):
     conn.execute("DELETE FROM fridge_items WHERE id = ?", (row_id,))
     conn.commit()
     conn.close()
-    print(f"Removed: {food} ({owner}), was in since {chosen[3]}.")
+    print(f"Removed: {food} ({owner or chosen[2]}), was in since {chosen[3]}.")
 
 
 def list_items():
@@ -193,6 +199,9 @@ def main():
     elif len(args) in (2, 3) and args[1] == "in":
         date_in = args[2] if len(args) == 3 else None
         add_item(args[0], DEFAULT_OWNER, date_in)
+    elif len(args) in (2, 3) and args[1] == "out":
+        date_in = args[2] if len(args) == 3 else None
+        remove_item(args[0], None, date_in)
     else:
         print(__doc__)
         sys.exit(1)
