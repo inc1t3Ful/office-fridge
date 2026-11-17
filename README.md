@@ -9,10 +9,12 @@ Python 3.9+
 ## Usage
 
 ```
-fridge.py <food> <owner> in [date]    Add an item to the fridge
+fridge.py <food> [owner] in [date]    Add an item to the fridge
 fridge.py <food> <owner> out [date]   Remove an item from the fridge
 fridge.py list                        Show current inventory
 ```
+
+`[owner]` is optional. For `in`, it defaults to `Anthony` (`DEFAULT_OWNER` in `fridge.py`).
 
 `[date]` is optional (format `YYYY-MM-DD`), defaults to today. For `in`, useful for backdating entries when first populating the db; future dates are rejected. For `out`, disambiguates when the same food/owner has multiple entries.
 
@@ -22,6 +24,7 @@ Quote multi-word names:
 fridge.py "leftover pasta" Anthony in
 fridge.py "leftover pasta" Anthony in 2026-09-01
 fridge.py "leftover pasta" Anthony out 2026-09-01
+fridge.py "leftover pasta" in
 ```
 
 Removing an item looks up matches by food name and owner (case-insensitive), and by date if given. If more than one match remains, it lists them and asks which to remove.

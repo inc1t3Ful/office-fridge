@@ -24,7 +24,7 @@ d=$(mktemp -d) && cp fridge.py "$d" && python3 "$d/fridge.py" list
 
 ## Architecture
 
-- `main()` dispatches on positional `sys.argv` (no argparse) to `add_item()`, `remove_item()`, or `list_items()`. The verb is `args[2]` for `in`/`out`; `list` is the only argument on its own.
+- `main()` dispatches on positional `sys.argv` (no argparse) to `add_item()`, `remove_item()`, or `list_items()`. The verb is `args[2]` for `in`/`out`, or `args[1]` when the owner is omitted on `in` (which then uses `DEFAULT_OWNER`); `list` is the only argument on its own.
 - `get_connection()` runs `CREATE TABLE IF NOT EXISTS` on every call. That is the only schema management, so changing `fridge_items` columns will not reach an existing `fridge.db` without a migration you write.
 - Elapsed time is computed on read by `format_elapsed()` and never stored.
 

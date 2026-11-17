@@ -3,9 +3,11 @@
 fridge.py — simple office fridge inventory tracker (SQLite-backed)
 
 Usage:
-    fridge.py <food> <owner> in [date]    Add an item to the fridge
+    fridge.py <food> [owner] in [date]    Add an item to the fridge
     fridge.py <food> <owner> out [date]   Remove an item from the fridge
     fridge.py list                        Show current inventory
+
+[owner] is optional. For "in": defaults to Anthony.
 
 [date] is optional, format YYYY-MM-DD. Defaults to today.
 
@@ -18,6 +20,7 @@ Quote multi-word names, e.g.:
     fridge.py "leftover pasta" Anthony in
     fridge.py "leftover pasta" Anthony in 2026-09-01
     fridge.py "leftover pasta" Anthony out 2026-09-01
+    fridge.py "leftover pasta" in
 """
 
 import sys
@@ -26,6 +29,7 @@ from datetime import date
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "fridge.db"
+DEFAULT_OWNER = "Anthony"
 
 
 def get_connection():
@@ -186,6 +190,9 @@ def main():
         food, owner = args[0], args[1]
         date_in = args[3] if len(args) == 4 else None
         remove_item(food, owner, date_in)
+    elif len(args) in (2, 3) and args[1] == "in":
+        date_in = args[2] if len(args) == 3 else None
+        add_item(args[0], DEFAULT_OWNER, date_in)
     else:
         print(__doc__)
         sys.exit(1)
