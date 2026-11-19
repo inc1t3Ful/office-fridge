@@ -14,9 +14,11 @@ fridge.py <food> [owner] out [date]   Remove an item from the fridge
 fridge.py list                        Show current inventory
 ```
 
-`[owner]` is optional. For `in`, it defaults to `Anthony` (`DEFAULT_OWNER` in `fridge.py`). For `out`, omitting it matches the food name across all owners.
+`[owner]` is optional. For `in`, it defaults to `anthony` (`DEFAULT_OWNER` in `fridge.py`). For `out`, omitting it matches the food name across all owners.
 
 `[date]` is optional (format `YYYY-MM-DD`), defaults to today. For `in`, useful for backdating entries when first populating the db; future dates are rejected. For `out`, disambiguates when the same food/owner has multiple entries.
+
+Food and owner names are lowercased before they are stored or matched.
 
 Quote multi-word names:
 
@@ -34,19 +36,19 @@ Removing an item looks up matches by food name (case-insensitive), plus owner an
 
 ```
 $ ./fridge.py "leftover pasta" Anthony in
-Added: leftover pasta (Anthony) — logged in on 2026-09-23
+Added: leftover pasta (anthony) — logged in on 2026-09-23
 
 $ ./fridge.py milk Sam in
-Added: milk (Sam) — logged in on 2026-09-23
+Added: milk (sam) — logged in on 2026-09-23
 
 $ ./fridge.py list
       ITEM       |   OWNER   |   DATE IN    |  TIME IN 
 -----------------+-----------+--------------+----------
- leftover pasta  |  Anthony  |  2026-09-23  |   today  
-      milk       |    Sam    |  2026-09-23  |   today  
+ leftover pasta  |  anthony  |  2026-09-23  |   today  
+      milk       |    sam    |  2026-09-23  |   today  
 
 $ ./fridge.py milk Sam out
-Removed: milk (Sam), was in since 2026-09-23.
+Removed: milk (sam), was in since 2026-09-23.
 ```
 
 ## Architecture

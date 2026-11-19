@@ -7,10 +7,12 @@ Usage:
     fridge.py <food> [owner] out [date]   Remove an item from the fridge
     fridge.py list                        Show current inventory
 
-[owner] is optional. For "in": defaults to Anthony.
+[owner] is optional. For "in": defaults to anthony.
 For "out": if omitted, matches the food name across all owners.
 
 [date] is optional, format YYYY-MM-DD. Defaults to today.
+
+Food and owner names are stored lowercase.
 
 For "in": useful for backdating entries when first populating the db.
 Future dates are rejected.
@@ -31,7 +33,7 @@ from datetime import date
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "fridge.db"
-DEFAULT_OWNER = "Anthony"
+DEFAULT_OWNER = "anthony"
 
 
 def get_connection():
@@ -74,6 +76,7 @@ def is_valid_date(value):
 
 
 def add_item(food, owner, date_in=None):
+    food, owner = food.lower(), owner.lower()
     today = date.today().isoformat()
     if date_in is None:
         date_in = today
@@ -96,6 +99,8 @@ def add_item(food, owner, date_in=None):
 
 def remove_item(food, owner=None, date_in=None):
     """owner=None matches the food name across all owners."""
+    food = food.lower()
+    owner = owner.lower() if owner is not None else None
     if date_in is not None and not is_valid_date(date_in):
         print(f"Invalid date '{date_in}'. Use format YYYY-MM-DD.")
         return
