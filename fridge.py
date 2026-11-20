@@ -7,7 +7,8 @@ Usage:
     fridge.py <food> [owner] out [date]   Remove an item from the fridge
     fridge.py list                        Show current inventory
 
-[owner] is optional. For "in": defaults to anthony.
+[owner] is optional. For "in": defaults to $FRIDGE_DEFAULT_OWNER, and is
+required if that is unset.
 For "out": if omitted, matches the food name across all owners.
 
 [date] is optional, format YYYY-MM-DD. Defaults to today.
@@ -27,13 +28,13 @@ Quote multi-word names, e.g.:
     fridge.py "leftover pasta" out
 """
 
+import os
 import sys
 import sqlite3
 from datetime import date
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "fridge.db"
-DEFAULT_OWNER = "anthony"
 
 
 def get_connection():
@@ -202,8 +203,13 @@ def main():
         date_in = args[3] if len(args) == 4 else None
         remove_item(food, owner, date_in)
     elif len(args) in (2, 3) and args[1] == "in":
+        owner = os.environ.get("FRIDGE_DEFAULT_OWNER")
+        if not owner:
+            print("No owner given and FRIDGE_DEFAULT_OWNER is not set.")
+            print(__doc__)
+            sys.exit(1)
         date_in = args[2] if len(args) == 3 else None
-        add_item(args[0], DEFAULT_OWNER, date_in)
+        add_item(args[0], owner, date_in)
     elif len(args) in (2, 3) and args[1] == "out":
         date_in = args[2] if len(args) == 3 else None
         remove_item(args[0], None, date_in)

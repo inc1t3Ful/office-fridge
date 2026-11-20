@@ -14,7 +14,12 @@ fridge.py <food> [owner] out [date]   Remove an item from the fridge
 fridge.py list                        Show current inventory
 ```
 
-`[owner]` is optional. For `in`, it defaults to `anthony` (`DEFAULT_OWNER` in `fridge.py`). For `out`, omitting it matches the food name across all owners.
+`[owner]` is optional. For `in`, it defaults to the `FRIDGE_DEFAULT_OWNER` environment variable, and is required if that is unset. For `out`, omitting it matches the food name across all owners.
+
+```
+export FRIDGE_DEFAULT_OWNER=sam
+fridge.py milk in    # same as: fridge.py milk sam in
+```
 
 `[date]` is optional (format `YYYY-MM-DD`), defaults to today. For `in`, useful for backdating entries when first populating the db; future dates are rejected. For `out`, disambiguates when the same food/owner has multiple entries.
 
